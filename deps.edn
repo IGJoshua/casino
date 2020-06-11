@@ -1,0 +1,20 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.10.1"}
+        org.clojure/core.async {:mvn/version "1.2.603"}
+        com.rpl/specter {:mvn/version "1.1.3"}
+        com.taoensso/timbre {:mvn/version "4.10.0"}
+        org.suskalo/discljord {:git/url "https://github.com/IGJoshua/discljord.git"
+                               :sha "9158a461a7e143e6f9ed7cf73160c07e99b062b8"}}
+ :aliases
+ {:test {:extra-paths ["test"]
+         :extra-deps {org.clojure/test.check {:mvn/version "1.0.0"}}}
+  :dev {:extra-paths ["dev"]}
+  :runner
+  {:extra-deps {com.cognitect/test-runner
+                {:git/url "https://github.com/cognitect-labs/test-runner"
+                 :sha "f7ef16dc3b8332b0d77bc0274578ad5270fbfedd"}}
+   :main-opts ["-m" "cognitect.test-runner"
+               "-d" "test"]}
+  :uberjar {:extra-deps {seancorfield/depstar {:mvn/version "1.0.94"}}
+            :main-opts ["-m" "hf.depstar.uberjar" "casino.jar"
+                        "-C" "-m" "casino.house"]}}}
