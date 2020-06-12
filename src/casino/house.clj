@@ -6,9 +6,9 @@
    [clojure.core.async :as a]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [discljord.connections :as c]
+   [discljord.connections :as conn]
    [discljord.events :refer [message-pump!]]
-   [discljord.messaging :as m])
+   [discljord.messaging :as msg])
   (:gen-class))
 
 (defn make-handler
@@ -40,9 +40,9 @@
   ([token handler] (run token handler #{}))
   ([token handler intents]
    (let [events-chan (a/chan 10000)
-         messaging-chan (m/start-connection! token)
-         connection-chan (c/connect-bot! token events-chan
-                                         :intents intents)]
+         messaging-chan (msg/start-connection! token)
+         connection-chan (conn/connect-bot! token events-chan
+                                            :intents intents)]
      (binding [*messaging* messaging-chan
                *connection* connection-chan]
        (message-pump! events-chan handler)))))
