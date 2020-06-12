@@ -59,9 +59,19 @@
   {:ready [#'save-connections]
    :message-create [(debug-command-middleware (e/make-run-commands #'debug-commands))]})
 
+(def event->logging-level
+  "Map from event types to the logging level it should be logged at."
+  {:message-create :debug
+   :ready :info})
+
+(defn logging-filter
+  [event-type event-data]
+  (or (event->logging-level event-type)
+      :debug))
+
 (def middleware
   "Middleware to run over the event handler for debugging at the repl."
-  (comp (make-logger (constantly :info))
+  (comp (make-logger #'logging-filter)
         (handler->middleware
          (h/make-handler #'extra-handlers))))
 
