@@ -26,7 +26,7 @@
 
 (def commands
   "Standard commands for normal bot behavior"
-  [[#"ping" #'c/pong]])
+  [])
 
 (def command-middleware
   "Prevents bot messages and unrelated messages from being processed."
