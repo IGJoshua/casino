@@ -9,7 +9,8 @@
    [clojure.java.io :as io]
    [clojure.string :as str]
    [discljord.connections :as d.c]
-   [discljord.messaging :as d.m]))
+   [discljord.messaging :as d.m]
+   [taoensso.timbre :as log]))
 
 (def token (str/trim (slurp (io/resource "token-canary.txt"))))
 (def owner (str/trim (slurp (io/resource "owner.txt"))))
@@ -86,3 +87,11 @@
               token
               (middleware (h/make-handler #'h/handlers))
               (into h/intents extra-intents))))
+
+(defn discljord-logging-level!
+  "Sets the logging level for discljord."
+  [level]
+  (log/merge-config! {:ns-blacklist ["discljord.*"]
+                      :appenders {:discljord (merge (log/println-appender)
+                                                    {:ns-whitelist ["discljord.*"]
+                                                     :min-level level})}}))
