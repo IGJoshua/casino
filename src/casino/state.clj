@@ -1,4 +1,6 @@
 (ns casino.state)
 
-(def ^:dynamic *messaging* nil)
-(def ^:dynamic *connection* nil)
+(defonce ^:dynamic *messaging* nil)
+(defonce ^:dynamic *connection* nil)
+
+(defonce state (atom {}))
