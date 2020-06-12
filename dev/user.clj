@@ -10,4 +10,4 @@
 (defn run-bot
   "Starts the bot with the canary token on a dedicated thread."
   []
-  (a/thread (h/run token)))
+  (a/thread (h/run token (fn [_ _]))))
