@@ -12,10 +12,14 @@
   "Middleware to run over the event handler for debugging at the repl."
   (comp (make-logging-middleware (constantly :info))))
 
+(def extra-intents
+  "Additional intents required for the middleware."
+  #{})
+
 (defn run-bot
   "Starts the bot with the canary token on a dedicated thread."
   []
   (a/thread (h/run
               token
-              (middleware (fn [_ _]))
-              #{})))
+              (middleware (h/make-handler #'h/handlers))
+              (into h/intents extra-intents))))
