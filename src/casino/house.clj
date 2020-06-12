@@ -27,6 +27,13 @@
   This is the default set of event handlers which are required for the bot."
   {})
 
+(def intents
+  "Set of all intents which are required for the bot to function properly.
+
+  This is closely tied to [[handlers]] because the specific handlers used
+  determines which intents are needed."
+  #{})
+
 (defn run
   "Starts a bot using the given `token`."
   ([token handler] (run token handler #{}))
