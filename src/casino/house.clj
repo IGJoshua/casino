@@ -21,6 +21,12 @@
     (doseq [f (handlers event-type)]
       (f event-type event-data))))
 
+(def handlers
+  "Map from discord event types to vars of functions to handle those events.
+
+  This is the default set of event handlers which are required for the bot."
+  {})
+
 (defn run
   "Starts a bot using the given `token`."
   ([token handler] (run token handler #{}))
