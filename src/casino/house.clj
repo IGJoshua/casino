@@ -1,7 +1,9 @@
 (ns casino.house
   "A bot for playing interactive casino games."
   (:require
+   [casino.commands :as c]
    [casino.events :as e]
+   [casino.middleware :as m]
    [casino.state :refer [*messaging* *connection*]]
    [clojure.core.async :as a]
    [clojure.java.io :as io]
@@ -22,11 +24,26 @@
     (doseq [f (handlers event-type)]
       (f event-type event-data))))
 
+(def commands
+  "Standard commands for normal bot behavior"
+  [[#"ping" #'c/pong]])
+
+(def command-middleware
+  "Prevents bot messages and unrelated messages from being processed."
+  (m/make-transducer
+   (comp m/ignore-bot-messages
+         (filter (fn [[_ event-data]]
+                   (str/starts-with? (:content event-data) "!")))
+         (map (m/data-transform
+               (fn [{:keys [content] :as event}]
+                 (assoc event :content (subs content 1))))))))
+
 (def handlers
   "Map from discord event types to vars of functions to handle those events.
 
   This is the default set of event handlers which are required for the bot."
-  {:ready [#'e/store-user]})
+  {:ready [#'e/store-user]
+   :message-create [(command-middleware (e/make-run-commands #'commands))]})
 
 (def intents
   "Set of all intents which are required for the bot to function properly.
