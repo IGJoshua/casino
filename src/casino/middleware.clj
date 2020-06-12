@@ -44,3 +44,12 @@
          (log/log logging-level event-type event-data)
          (log/debug event-type event-data)))
      (handler event-type event-data))))
+
+(def ignore-bot-messages
+  "Middleware which won't call the handler if the event is from a bot."
+  (make-middleware
+   (fn [handler event-type event-data]
+     (if (#{:message-create :message-update} event-type)
+       (when-not (:bot event-data)
+         (handler event-type event-data))
+       (handler event-type event-data)))))
