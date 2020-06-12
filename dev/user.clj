@@ -1,7 +1,7 @@
 (ns user
   (:require
    [casino.house :as h]
-   [casino.middleware :refer [make-logger handler->middleware]]
+   [casino.middleware :as mdw :refer [make-logger handler->middleware]]
    [casino.state :refer [*messaging* *connection*]]
    [clojure.core.async :as a]
    [clojure.java.io :as io]

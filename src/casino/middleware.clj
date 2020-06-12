@@ -55,6 +55,42 @@
      (when (pred event-type event-data)
        (handler event-type event-data)))))
 
+(defn data-transform
+  "Makes a transform function for use with [[make-transform]] that operates on event-data.
+
+  The resulting function is from a vector of event-type and event-data to a
+  vector of event-type and event-data. The event-type is passed through without
+  change, and event-data is transformed by `f`."
+  [f]
+  (fn [[event-type event-data]]
+    [event-type (f event-data)]))
+
+(defn make-transform
+  "Makes a middleware which runs `f` over events before passing to the handler.
+
+  `f` is a function of a vector of event-type and event-data to a vector of
+  event-type and event-data which are then passed to the handler."
+  [f]
+  (make-middleware
+   (fn [handler event-type event-data]
+     (let [[event-type event-data] (f [event-type event-data])]
+       (handler event-type event-data)))))
+
+(defn make-transducer
+  "Makes a middleware which takes a transducer and runs it over event-data."
+  [xf]
+  (let [reduced (volatile! false)
+        reducer (fn [send-event [event-type event-data]]
+                  (send-event event-type event-data))
+        reducer (xf reducer)]
+    (make-middleware
+     (fn [handler event-type event-data]
+       (when-not @reduced
+         (let [res (reducer handler [event-type event-data])]
+           (when (reduced? res)
+             (vreset! reduced true))
+           res))))))
+
 (def ignore-bot-messages
   "Middleware which won't call the handler if the event is from a bot."
   (make-filter
