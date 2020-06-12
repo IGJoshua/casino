@@ -45,11 +45,21 @@
          (log/debug event-type event-data)))
      (handler event-type event-data))))
 
-(def ignore-bot-messages
-  "Middleware which won't call the handler if the event is from a bot."
+(defn make-filter
+  "Makes middleware that only calls the handler if `pred` returns truthy.
+
+  `pred` is a predicate expected to take the event-type and event-data."
+  [pred]
   (make-middleware
    (fn [handler event-type event-data]
+     (when (pred event-type event-data)
+       (handler event-type event-data)))))
+
+(def ignore-bot-messages
+  "Middleware which won't call the handler if the event is from a bot."
+  (make-filter
+   (fn [event-type event-data]
      (if (#{:message-create :message-update} event-type)
        (when-not (:bot event-data)
-         (handler event-type event-data))
-       (handler event-type event-data)))))
+         true)
+       true))))
