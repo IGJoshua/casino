@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file. This change
 
 ## [Unreleased]
 ### Added
+ - Add debug command to disconnect bot and ping it
+ - Add support for commands and debug commands
+ - Event streams as transducible contexts
  - Middleware on event handlers
  - Support for event handlers
  - Initial connection to discord
