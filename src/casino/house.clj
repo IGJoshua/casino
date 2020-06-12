@@ -50,7 +50,7 @@
 
   This is closely tied to [[handlers]] because the specific handlers used
   determines which intents are needed."
-  #{})
+  #{:guild-messages})
 
 (defn run
   "Starts a bot using the given `token`."
