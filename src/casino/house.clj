@@ -9,6 +9,17 @@
    [discljord.messaging :as m])
   (:gen-class))
 
+(defn make-handler
+  "Creates a function which calls each handler for a given event.
+
+  Takes a map from keywords of events to vectors of handler functions which take
+  the event-type received and the event data, and runs them in sequence,
+  ignoring return results."
+  [handlers]
+  (fn [event-type event-data]
+    (doseq [f (handlers event-type)]
+      (f event-type event-data))))
+
 (defn run
   "Starts a bot using the given `token`."
   ([token handler] (run token handler #{}))
