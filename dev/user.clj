@@ -1,7 +1,7 @@
 (ns user
   (:require
    [casino.house :as h]
-   [casino.middleware :refer [make-logging-middleware handler->middleware]]
+   [casino.middleware :refer [make-logger handler->middleware]]
    [casino.state :refer [*messaging* *connection*]]
    [clojure.core.async :as a]
    [clojure.java.io :as io]
@@ -16,7 +16,7 @@
 
 (def middleware
   "Middleware to run over the event handler for debugging at the repl."
-  (comp (make-logging-middleware (constantly :info))
+  (comp (make-logger (constantly :info))
         (handler->middleware
          (fn [event-type event-data]
            (when (= event-type :ready)

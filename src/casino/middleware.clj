@@ -30,7 +30,7 @@
      (handler event-type event-data)
      (hnd event-type event-data))))
 
-(defn make-logging-middleware
+(defn make-logger
   "Takes a predicate and if it returns true, logs the event before passing it on.
 
   The predicate must take the event-type and the event-data, and return a truthy
