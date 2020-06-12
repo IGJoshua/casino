@@ -1,4 +1,4 @@
-(ns casino.repl.middleware
+(ns casino.middleware
   "Provides middleware for debugging purposes on the event stream.
 
   Middleware functions are event handlers which can perform arbitrary
