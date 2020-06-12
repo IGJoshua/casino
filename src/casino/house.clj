@@ -1,6 +1,7 @@
 (ns casino.house
   "A bot for playing interactive casino games."
   (:require
+   [casino.events :as e]
    [casino.state :refer [*messaging* *connection*]]
    [clojure.core.async :as a]
    [clojure.java.io :as io]
@@ -25,7 +26,7 @@
   "Map from discord event types to vars of functions to handle those events.
 
   This is the default set of event handlers which are required for the bot."
-  {})
+  {:ready [#'e/store-user]})
 
 (def intents
   "Set of all intents which are required for the bot to function properly.
