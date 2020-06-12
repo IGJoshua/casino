@@ -51,5 +51,6 @@
   [& args]
   (run
     (str/trim (slurp (io/resource "token.txt")))
-    (fn [_ _]))
+    (make-handler #'handlers)
+    intents)
   (shutdown-agents))
