@@ -1,4 +1,5 @@
 (ns casino.house
+  "A bot for playing interactive casino games."
   (:require
    [casino.state :refer [*messaging* *connection*]]
    [clojure.core.async :as a]
