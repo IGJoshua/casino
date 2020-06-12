@@ -1,5 +1,8 @@
 (ns casino.commands
-  "Functions for creating and evaluating commands.")
+  "Functions for creating and evaluating commands."
+  (:require
+   [casino.state :refer [*messaging*]]
+   [discljord.messaging :as m]))
 
 (defn eval-regex-commands
   "Evaluates a command structure given a string and extra args for the handlers.
@@ -23,3 +26,8 @@
             (apply f match args)
             (recur (rest clauses))))
         (apply item s args)))))
+
+(defn pong
+  "Test command that sends \"pong\" when a message is recieved."
+  [pinging-msg event-type event-data]
+  (m/create-message! *messaging* (:channel-id event-data) :content "pong!"))
