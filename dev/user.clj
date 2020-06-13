@@ -95,3 +95,5 @@
                       :appenders {:discljord (merge (log/println-appender)
                                                     {:ns-whitelist ["discljord.*"]
                                                      :min-level level})}}))
+
+(defonce set-level (discljord-logging-level! :warn))
