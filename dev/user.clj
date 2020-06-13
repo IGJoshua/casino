@@ -118,3 +118,16 @@
   "Returns a lazy sequence of payouts for a given bet on the machine."
   [machine bet]
   (map second (repeatedly #(slots/play-slots machine bet))))
+
+(def test-embed
+  "Embed for displaying slot machine winnings."
+  {:title "Base Machine"
+   :type "rich"
+   :color 0x00FF00
+   :fields [{:name "Results"
+             :value (str ":cherries::cherries::seven::8ball::cherries:\n"
+                         ":cherries::cherries::cherries::cherries::cherries:\n"
+                         ":cherries::cherries::seven::8ball::cherries:")}
+            {:name "Winnings"
+             :value "You lost!"}]
+   :footer {:text "Bottom Text"}})
