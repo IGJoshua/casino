@@ -183,7 +183,7 @@
     (->> seqs
          (map (fn [s]
                 (->> s
-                     (partition-by identity)
+                     (partition-by ::name)
                      (filter #(>= (count %) 3))
                      flatten)))
          (remove (comp zero? count)))))
