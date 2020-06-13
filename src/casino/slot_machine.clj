@@ -7,7 +7,7 @@
 (s/def ::value pos-int?)
 (s/def ::name keyword?)
 (s/def ::symbol (s/keys :req [::value ::name]))
-(s/def ::symbols (s/coll-of ::symbol :kind set?))
+(s/def ::symbols (s/coll-of ::symbol))
 
 (defn make-symbol
   [name value]
@@ -21,12 +21,19 @@
 (s/def ::rows pos-int?)
 (s/def ::columns (s/and pos-int?
                         #(>= % 3)))
+(s/def ::min-bet nat-int?)
+(s/def ::max-bet nat-int?)
 (s/def ::machine (s/with-gen
-                   (s/and (s/keys :req [::symbols ::rows ::columns])
-                          #(> (count (::symbols %)) (::rows %)))
+                   (s/and (s/keys :req [::symbols ::rows ::columns
+                                        ::min-bet ::max-bet])
+                          #(> (count (::symbols %)) (::rows %))
+                          #(> (::max-bet %) (::min-bet %)))
                    #(gen/let [cols (gen/fmap (partial + 3) gen/nat)
                               rows (gen/fmap inc gen/nat)
-                              machine (gen/return {::rows rows ::columns cols})
+                              min-bet gen/nat
+                              max-bet (gen/fmap (partial + min-bet) gen/nat)
+                              machine (gen/return {::rows rows ::columns cols
+                                                   ::min-bet min-bet ::max-bet max-bet})
                               symbols (gen/set (s/gen ::symbol)
                                                {:min-elements (inc (::rows machine))})]
                       (assoc machine ::symbols symbols))))
@@ -39,14 +46,20 @@
   ([symbols]
    (make-machine symbols 1 3))
   ([symbols rows columns]
+   (make-machine symbols rows columns 1 5))
+  ([symbols rows columns min-bet max-bet]
    (when (> (count symbols) rows)
-     {::symbols (set symbols)
+     {::symbols symbols
       ::rows rows
-      ::columns columns})))
+      ::columns columns
+      ::min-bet min-bet
+      ::max-bet max-bet})))
 (s/fdef make-machine
   :args (s/cat :symbols (s/coll-of ::symbol :min-count 2)
                :size (s/? (s/cat :rows ::rows
-                                 :columns ::columns)))
+                                 :columns ::columns
+                                 :bets (s/? (s/cat :min-bet ::min-bet
+                                                   :max-bet ::max-bet)))))
   :fn (fn [{:keys [args ret]}]
         (if (:size args)
           (if (> (count (:symbols args)) (:rows (:size args)))
@@ -177,3 +190,37 @@
 (s/fdef runs
   :args (s/cat :spin ::spin-state)
   :ret (s/coll-of (s/coll-of ::symbol)))
+
+(defn score-for-run
+  "Returns an integer score for a given run."
+  [run]
+  (* (transduce (map ::value) + 0 run)
+     (count run)))
+(s/fdef score-for-run
+  :args (s/cat :run (s/coll-of ::symbol))
+  :ret nat-int?)
+
+(defn payout-for-bet
+  "Returns the payout for the given machine given a bet and score."
+  [machine bet score]
+  (let [bet-ratio (+ 1 (/ (- bet (::min-bet machine))
+                          (- (::max-bet machine)
+                             (::min-bet machine))))]
+    (int (* bet-ratio score))))
+(s/fdef payout-for-bet
+  :args (s/cat :machine ::machine
+               :bet pos-int?
+               :score pos-int?)
+  :ret nat-int?)
+
+(defn play-slots
+  "Takes a machine and a bet and runs a spin, returning the payout."
+  [machine bet]
+  (let [spin (spin machine)
+        runs (runs spin)
+        score (transduce (map score-for-run) + 0 runs)]
+    (payout-for-bet machine bet score)))
+(s/fdef play-slots
+  :args (s/cat :machine ::machine
+               :bet pos-int?)
+  :ret nat-int?)

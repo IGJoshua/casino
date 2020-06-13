@@ -16,8 +16,7 @@
   (t/testing "constructing values"
     (t/testing "basic make-thing functions"
       (test-specced-fns
-       `(sut/make-symbol
-         sut/make-machine)
+       `(sut/make-symbol)
        {::stc/opts {:num-tests 100}})))
   (t/testing "step functions"
     (test-specced-fns
@@ -25,8 +24,22 @@
        sut/rows
        sut/in-bounds?
        sut/diagonals
-       sut/runs)
+       sut/runs
+       sut/score-for-run
+       sut/play-slots)
      {::stc/opts {:num-tests 10}})))
+
+(defspec make-machine-for-bet 10
+  (prop/for-all
+   [[rows symbols] (gen/let [rows (s/gen ::sut/rows)
+                             symbols (gen/set (s/gen ::sut/symbol)
+                                              {:min-elements (inc rows)})]
+                     [rows symbols])
+    columns (s/gen ::sut/columns)
+    [min-bet max-bet] (gen/let [min gen/nat
+                                max (gen/fmap (partial + 1 min) gen/nat)]
+                        [min max])]
+   (s/valid? ::sut/machine (sut/make-machine symbols rows columns min-bet max-bet))))
 
 (defspec get-from-coords 20
   (prop/for-all
@@ -49,3 +62,11 @@
              (sut/symbol-at-coord spin
                                   [(rem x (count spin))
                                    (rem y (count (first spin)))]))))
+
+(defspec payout-in-range
+  (prop/for-all
+   [args (gen/let [machine (s/gen ::sut/machine)
+                   bet (gen/fmap (partial + (::sut/min-bet machine)) gen/nat)
+                   score gen/nat]
+           [machine bet score])]
+   (nat-int? (apply sut/payout-for-bet args))))
