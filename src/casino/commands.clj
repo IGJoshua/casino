@@ -34,19 +34,59 @@
   [pinging-msg event-type event-data]
   (m/create-message! *messaging* (:channel-id event-data) :content "pong!"))
 
+(defn- make-spin-str
+  [machine spin]
+  (apply str
+         (interpose "\n"
+                    (map (fn [row]
+                           (apply str (map (::display machine) (map ::slots/name row))))
+                         (slots/rows spin)))))
+
+(defn make-spin-embed
+  "Makes an embed to display the results of a spin."
+  [machine spin bet winnings]
+  {:title (::name machine)
+   :type "rich"
+   :color (::color machine)
+   :fields [{:name "Results"
+             :value (make-spin-str machine spin)}
+            {:name "Winnings"
+             :value (str
+                     "You bet $" bet "\n"
+                     (if (zero? winnings)
+                       "You lost!"
+                       (str "You won $" winnings "!")))}]
+   :footer {:text (::footer machine)}})
+
 (def base-machine
   "Basic machine to play with while working on the bot."
-  (slots/make-machine (map (partial apply slots/make-symbol)
-                           '((:seven 70) (:seven 70) (:super-seven 777) (:eight-ball 88)
-                             (:eight-ball 88)
-                             (:hundred 1000)
-                             (:cherry 15) (:cherry 15) (:cherry 15)
-                             (:bell 2) (:bell 2) (:bell 2) (:bell 2)))
-                      3 5
-                      25 150))
+  (assoc (slots/make-machine (map (partial apply slots/make-symbol)
+                                  '((:hundred 100) (:hundred 100)
+                                    (:eight-ball 88)
+                                    (:super-seven 77) (:super-seven 77)
+                                    (:melon 7) (:melon 7) (:melon 7)
+                                    (:cherry 5) (:cherry 5) (:cherry 5)
+                                    (:bell 2) (:bell 2) (:bell 2)
+                                    (:checkmark 1) (:checkmark 1) (:checkmark 1)))
+                             3 5
+                             25 150)
+         ::color 0x00FF00
+         ::display {:hundred ":100:"
+                    :eight-ball ":8ball:"
+                    :super-seven ":seven:"
+                    :melon ":watermelon:"
+                    :cherry ":cherries:"
+                    :bell ":bell:"
+                    :checkmark ":ballot_box_with_check:"}
+         ::name "Base Machine"
+         ::footer "BOTTOM TEXT"))
 
 (defn play-slots
   "Plays a game of slots."
-  [slots-msg event-type event-data]
-  (m/create-message! *messaging* (:channel-id event-data)
-                     :content (with-out-str (pp/pprint (slots/play-slots base-machine 75)))))
+  [[_ bet :as msg] event-type event-data]
+  (let [bet (and (vector? msg)
+                 (Long. bet))
+        bet (or bet 75)
+        [spin winnings] (slots/play-slots base-machine bet)]
+    (m/create-message! *messaging* (:channel-id event-data)
+                       :embed (make-spin-embed base-machine spin bet winnings))))
