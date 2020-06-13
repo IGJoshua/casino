@@ -25,8 +25,7 @@
        sut/in-bounds?
        sut/diagonals
        sut/runs
-       sut/score-for-run
-       sut/play-slots)
+       sut/score-for-run)
      {::stc/opts {:num-tests 10}})))
 
 (defspec make-machine-for-bet 10

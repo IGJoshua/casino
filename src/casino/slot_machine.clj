@@ -219,8 +219,9 @@
   (let [spin (spin machine)
         runs (runs spin)
         score (transduce (map score-for-run) + 0 runs)]
-    (payout-for-bet machine bet score)))
+    [spin (payout-for-bet machine bet score)]))
 (s/fdef play-slots
   :args (s/cat :machine ::machine
                :bet pos-int?)
-  :ret nat-int?)
+  :ret (s/cat :spin ::spin-state
+              :payout nat-int?))

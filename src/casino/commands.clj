@@ -2,6 +2,8 @@
   "Functions for creating and evaluating commands."
   (:require
    [casino.state :refer [*messaging*]]
+   [casino.slot-machine :as slots]
+   [clojure.pprint :as pp]
    [discljord.messaging :as m]))
 
 (defn eval-regex-commands
@@ -31,3 +33,20 @@
   "Test command that sends \"pong\" when a message is recieved."
   [pinging-msg event-type event-data]
   (m/create-message! *messaging* (:channel-id event-data) :content "pong!"))
+
+(def base-machine
+  "Basic machine to play with while working on the bot."
+  (slots/make-machine (map (partial apply slots/make-symbol)
+                           '((:seven 70) (:seven 70) (:super-seven 777) (:eight-ball 88)
+                             (:eight-ball 88)
+                             (:hundred 1000)
+                             (:cherry 15) (:cherry 15) (:cherry 15)
+                             (:bell 2) (:bell 2) (:bell 2) (:bell 2)))
+                      3 5
+                      25 150))
+
+(defn play-slots
+  "Plays a game of slots."
+  [slots-msg event-type event-data]
+  (m/create-message! *messaging* (:channel-id event-data)
+                     :content (with-out-str (pp/pprint (slots/play-slots base-machine 75)))))

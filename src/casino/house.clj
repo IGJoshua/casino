@@ -26,7 +26,7 @@
 
 (def commands
   "Standard commands for normal bot behavior"
-  [])
+  [[#"slots" #'c/play-slots]])
 
 (def command-middleware
   "Prevents bot messages and unrelated messages from being processed."
