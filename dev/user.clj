@@ -4,6 +4,7 @@
    [casino.events :as e]
    [casino.house :as h]
    [casino.middleware :as mdw :refer [make-logger handler->middleware]]
+   [casino.slot-machine :as slots]
    [casino.state :refer [*messaging* *connection*]]
    [clojure.core.async :as a]
    [clojure.java.io :as io]
@@ -97,3 +98,23 @@
                                                      :min-level level})}}))
 
 (defonce set-level (discljord-logging-level! :warn))
+
+(defn average-payout
+  "Determines the average payout of a given slot `machine` over a number of `trials`."
+  [machine trials]
+  (loop [bet 0
+         won 0
+         trials trials]
+    (if (pos? trials)
+      (let [cur-bet (+ (::slots/min-bet machine)
+                       (rand-int (- (inc (::slots/max-bet machine))
+                                    (::slots/min-bet machine))))
+            [_ payout] (slots/play-slots machine cur-bet)]
+        (recur (+ bet cur-bet) (+ won payout)
+               (dec trials)))
+      (double (/ won bet)))))
+
+(defn payout-seq
+  "Returns a lazy sequence of payouts for a given bet on the machine."
+  [machine bet]
+  (map second (repeatedly #(slots/play-slots machine bet))))
