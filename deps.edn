@@ -3,7 +3,8 @@
         org.clojure/core.async {:mvn/version "1.3.618"}
         com.rpl/specter {:mvn/version "1.1.3"}
         com.taoensso/timbre {:mvn/version "4.10.0"}
-        org.suskalo/discljord {:mvn/version "1.2.2"}
+        org.suskalo/discljord {:git/url "https://github.com/IGJoshua/discljord"
+                               :sha "0969d11280f0dd33981a75a0c979a08bcec821bd"}
         org.suskalo/farolero {:mvn/version "1.0.3"}}
  :aliases
  {:test {:extra-paths ["test"]
