@@ -4,12 +4,14 @@
    [casino.events :as e]
    [casino.house :as h]
    [casino.middleware :as mdw :refer [make-logger handler->middleware]]
+   [casino.slot-machine :as slots]
    [casino.state :refer [*messaging* *connection*]]
    [clojure.core.async :as a]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [discljord.connections :as d.c]
-   [discljord.messaging :as d.m]))
+   [discljord.messaging :as d.m]
+   [taoensso.timbre :as log]))
 
 (def token (str/trim (slurp (io/resource "token-canary.txt"))))
 (def owner (str/trim (slurp (io/resource "owner.txt"))))
@@ -86,3 +88,46 @@
               token
               (middleware (h/make-handler #'h/handlers))
               (into h/intents extra-intents))))
+
+(defn discljord-logging-level!
+  "Sets the logging level for discljord."
+  [level]
+  (log/merge-config! {:ns-blacklist ["discljord.*"]
+                      :appenders {:discljord (merge (log/println-appender)
+                                                    {:ns-whitelist ["discljord.*"]
+                                                     :min-level level})}}))
+
+(defonce set-level (discljord-logging-level! :warn))
+
+(defn average-payout
+  "Determines the average payout of a given slot `machine` over a number of `trials`."
+  [machine trials]
+  (loop [bet 0
+         won 0
+         trials trials]
+    (if (pos? trials)
+      (let [cur-bet (+ (::slots/min-bet machine)
+                       (rand-int (- (inc (::slots/max-bet machine))
+                                    (::slots/min-bet machine))))
+            [_ payout] (slots/play-slots machine cur-bet)]
+        (recur (+ bet cur-bet) (+ won payout)
+               (dec trials)))
+      (double (/ won bet)))))
+
+(defn payout-seq
+  "Returns a lazy sequence of payouts for a given bet on the machine."
+  [machine bet]
+  (map second (repeatedly #(slots/play-slots machine bet))))
+
+(def test-embed
+  "Embed for displaying slot machine winnings."
+  {:title "Base Machine"
+   :type "rich"
+   :color 0x00FF00
+   :fields [{:name "Results"
+             :value (str ":cherries::cherries::seven::8ball::cherries:\n"
+                         ":cherries::cherries::cherries::cherries::cherries:\n"
+                         ":cherries::cherries::seven::8ball::cherries:")}
+            {:name "Winnings"
+             :value "You lost!"}]
+   :footer {:text "Bottom Text"}})
