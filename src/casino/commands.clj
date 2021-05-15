@@ -21,7 +21,7 @@
                [[regex+fn* fallthrough] s & args])}
   [commands s & args]
   (loop [clauses (seq commands)]
-    (let [item (first clauses)]
+    (when-let [item (first clauses)]
       (if (vector? item)
         (let [[re f] item]
           (if-let [match (re-matches re s)]
