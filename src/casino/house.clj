@@ -3,26 +3,15 @@
   (:require
    [casino.commands :as c]
    [casino.events :as e]
-   [casino.middleware :as m]
    [casino.state :refer [*messaging* *connection*]]
    [clojure.core.async :as a]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [discljord.connections :as conn]
-   [discljord.events :refer [message-pump!]]
+   [discljord.events :refer [message-pump! dispatch-handlers]]
+   [discljord.events.middleware :as mdl]
    [discljord.messaging :as msg])
   (:gen-class))
-
-(defn make-handler
-  "Creates a function which calls each handler for a given event.
-
-  Takes a map from keywords of events to vectors of handler functions which take
-  the event-type received and the event data, and runs them in sequence,
-  ignoring return results."
-  [handlers]
-  (fn [event-type event-data]
-    (doseq [f (handlers event-type)]
-      (f event-type event-data))))
 
 (def commands
   "Standard commands for normal bot behavior"
@@ -31,13 +20,13 @@
 
 (def command-middleware
   "Prevents bot messages and unrelated messages from being processed."
-  (m/make-transducer
-   (comp m/ignore-bot-messages
-         (filter (fn [[_ event-data]]
-                   (str/starts-with? (:content event-data) "!")))
-         (map (m/data-transform
-               (fn [{:keys [content] :as event}]
-                 (assoc event :content (subs content 1))))))))
+  (comp mdl/ignore-bot-messages
+        (mdl/transduce
+         (comp (filter (fn [[_ event-data]]
+                         (str/starts-with? (:content event-data) "!")))
+               (map (mdl/data-mapping
+                     (fn [{:keys [content] :as event}]
+                       (assoc event :content (subs content 1)))))))))
 
 (def handlers
   "Map from discord event types to vars of functions to handle those events.
@@ -70,6 +59,6 @@
   [& args]
   (run
     (str/trim (slurp (io/resource "token.txt")))
-    (make-handler #'handlers)
+    (partial dispatch-handlers #'handlers)
     intents)
   (shutdown-agents))

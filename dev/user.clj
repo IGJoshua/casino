@@ -3,13 +3,14 @@
    [casino.commands :as c]
    [casino.events :as e]
    [casino.house :as h]
-   [casino.middleware :as mdw :refer [make-logger handler->middleware]]
    [casino.slot-machine :as slots]
    [casino.state :refer [*messaging* *connection*]]
    [clojure.core.async :as a]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [discljord.connections :as d.c]
+   [discljord.events :refer [dispatch-handlers]]
+   [discljord.events.middleware :as mdl]
    [discljord.messaging :as d.m]
    [taoensso.timbre :as log]))
 
@@ -41,12 +42,12 @@
   "Prepares messages for debug command handling.
 
   This middleware should only be used on streams for :message-create events."
-  (mdw/make-transducer
+  (mdl/transduce
    (comp (filter (fn [[_ event-data]]
                    (= owner (:id (:author event-data)))))
          (filter (fn [[_ event-data]]
                    (str/starts-with? (:content event-data) "d!")))
-         (map (mdw/data-transform
+         (map (mdl/data-mapping
                (fn [{:keys [content] :as event}]
                  (assoc event :content (subs content 2))))))))
 
@@ -73,9 +74,8 @@
 
 (def middleware
   "Middleware to run over the event handler for debugging at the repl."
-  (comp (make-logger #'logging-filter)
-        (handler->middleware
-         (h/make-handler #'extra-handlers))))
+  (comp (mdl/log-when #'logging-filter)
+        (mdl/concat (partial dispatch-handlers #'extra-handlers))))
 
 (def extra-intents
   "Additional intents required for the middleware."
@@ -86,7 +86,7 @@
   []
   (a/thread (h/run
               token
-              (middleware (h/make-handler #'h/handlers))
+              (middleware (partial dispatch-handlers #'h/handlers))
               (into h/intents extra-intents))))
 
 (defn discljord-logging-level!
